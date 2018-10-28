@@ -44,11 +44,11 @@ local run_console_command = RunConsoleCommand
 // == LOCAL DATA
 local m_check_tbl = {pcall, error, jit.util.funck, net.Start, net.SendToServer, net.ReadHeader, net.WriteString, util.NetworkIDToString, TypeID, render.Capture, render.CapturePixels, render.ReadPixel, debug.getinfo}
 local bad_cheat_strings = {"aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploit city", "odium", "backdoor"}
-local bad_file_names = {"hack", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts"}
-local bad_function_names = {"hack", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz"}
+local bad_file_names = {"smeghack", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts"}
+local bad_function_names = {"smeghack", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz"}
 local bad_global_variables = {"bSendPacket", "ValidNetString", "totalExploits", "addExploit", "AutoReload", "CircleStrafe", "toomanysploits", "Sploit"}
 local bad_module_names = {"dickwrap", "aaa", "enginepred", "bsendpacket", "fhook", "cvar3", "cv3", "nyx", "amplify", "hi", "mega", "pa4", "pspeed", "snixzz2", "spreadthebutter", "stringtables", "svm", "swag", "external"}
-local bad_cvar_names = {"hack", "wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open"}
+local bad_cvar_names = {"wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open"}
 local synced_cvar_names = {"sv_allowcslua", "sv_cheats", "r_drawothermodels"}
 
 local m_check_file = true
