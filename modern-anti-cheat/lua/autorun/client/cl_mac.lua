@@ -285,15 +285,7 @@ function debug.getinfo(...)
   check_external(m_run_info)
   is_bad_file_name(m_run_info)
   is_bad_function(m_run_info)
-  return
-end
-
-function debug.getupvalue(...)
-  local m_run_info = debug_getinfo(2)
-  check_external(m_run_info)
-  is_bad_file_name(m_run_info)
-  is_bad_function(m_run_info)
-  return
+  return debug_getinfo(...)
 end
 
 function timer.Remove(id_str)
