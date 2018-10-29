@@ -30,6 +30,7 @@ You can now paste the key in the steam_api_key area below
 modern_anti_cheat_config.steam_api_key = "" -- Read above
 
 modern_anti_cheat_config.kick_banned_family_shared = true -- Kicks players if they are using a family shared account where the sharer has been previously banned
+modern_anti_cheat_config.kick_all_family_shared = false -- Kicks players if they are using a family shared account
 
 // == INGAME LOGGING CONFIG
 modern_anti_cheat_config.m_log_console = true -- Logs data to the console

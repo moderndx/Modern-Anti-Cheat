@@ -8,7 +8,7 @@ end
 // == NETWORKING
 
 // == LOCAL DATA
-local anti_cheat_version = "0010"
+local anti_cheat_version = "0011"
 
 local bad_net_messages = {"memeDoor", "ZimbaBackDoor", "enablevac", "adm_network", "AidsTacos", "thereaper", "ULX_ANTI_BACKDOOR", "FADMIN_ANTICRASH", "ULX_QUERY_TEST2", "anticrash", "_CAC_ReadMemory", "verifiopd", "Sandbox_ArmDupe", "ULX_QUERY2", "pwn_wake", "pwn_http_answer", "pwn_http_send"}
 // == LOCAL DATA
@@ -121,7 +121,7 @@ end
 
 local function attempt_verification(ply, step)
   if (verified_player(ply)) then return end -- just incase
-  if (!modern_anti_cheat_config.m_validate_players) then
+  if (!modern_anti_cheat_config.m_validate_players || ply:IsBot()) then
     verify_player(ply)
     network_data_to_ply(ply)
     log_ac_data(ply:Name().." has been verified", ply)
@@ -167,7 +167,7 @@ local function is_original_banned(s_id)
 end
 
 local function validate_player_steam(ply, ply_steamid)
-  if (!modern_anti_cheat_config.kick_banned_family_shared || string.len(modern_anti_cheat_config.steam_api_key) < 2) then return end
+  if (string.len(modern_anti_cheat_config.steam_api_key) < 2) then return end
   http.Fetch("http://api.steampowered.com/IPlayerService/IsPlayingSharedGame/v0001/?key="..modern_anti_cheat_config.steam_api_key.."&format=json&steamid="..ply:SteamID64().."&appid_playing=4000",
   function(body)
     if (!body) then return end
@@ -177,8 +177,13 @@ local function validate_player_steam(ply, ply_steamid)
 
     if (original_account == 0) then return end
 
-    if (is_original_banned(original_account)) then
-      kick_player("Family shared from banned account")
+    if (modern_anti_cheat_config.kick_all_family_shared) then
+      kick_player(ply, "Family shared account, please join back on your main account")
+      return
+    end
+
+    if (is_original_banned(original_account) && modern_anti_cheat_config.kick_banned_family_shared) then
+      kick_player(ply, "Family shared from banned account")
     end
   end)
 end
