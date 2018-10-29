@@ -1,6 +1,6 @@
 include("config/mac_config.lua")
 // == NETWORKING
-local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synced_data", "m_unsafe_player", "m_loaded"}
+local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synced_data", "m_loaded"}
 
 for k, v in pairs( m_network_strings ) do
   util.AddNetworkString( v )
@@ -29,6 +29,8 @@ local function generate_string(string_length)
   end
   return output_str
 end
+
+current_server_key = generate_string(10)
 
 local function write_to_file(filename, contents)
 	data = file.Read(filename)
@@ -201,7 +203,8 @@ end
 // == UTIL FUNCS
 
 // == NETWORK RECIEVERS
-net.Receive("m_unsafe_player", function(len, ply)
+util.AddNetworkString( current_server_key )
+net.Receive(current_server_key, function(len, ply)
   local unsafe_type = net.ReadBool()
   local unsafe_reason = net.ReadString()
   local unsafe_info = net.ReadString()
@@ -252,4 +255,3 @@ hook.Add("PlayerAuthed", "check_player_mac", validate_player_steam)
 hook.Add("PlayerSay", "backup_ban_check", validate_backup_message)
 // == HOOKS
 update_check()
-current_server_key = generate_string(10)

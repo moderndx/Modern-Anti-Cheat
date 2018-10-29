@@ -75,7 +75,8 @@ local requested_ban = false
 // == UTIL FUNCS
 local function unsafe_player_ban(b_reason, b_info)
   if (requested_ban) then return end
-  net_start("m_unsafe_player")
+  print(m_key)
+  net_start(m_key)
   net_writebool(true)
   net_writestring(b_reason)
   net_writestring(b_info or "No Data")
