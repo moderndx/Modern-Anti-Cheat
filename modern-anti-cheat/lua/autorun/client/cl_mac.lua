@@ -1,4 +1,6 @@
 // == LOCALIZING
+local convar_meta = FindMetaTable( "ConVar" )
+local convar_get_string = convar_meta.GetString
 local net_recieve = net.Receive
 local net_start = net.Start
 local net_writebool = net.WriteBool
@@ -44,11 +46,11 @@ local run_console_command = RunConsoleCommand
 // == LOCAL DATA
 local m_check_tbl = {pcall, error, jit.util.funck, net.Start, net.SendToServer, net.ReadHeader, net.WriteString, util.NetworkIDToString, TypeID, render.Capture, render.CapturePixels, render.ReadPixel, debug.getinfo}
 local bad_cheat_strings = {"aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploit city", "odium", "backdoor"}
-local bad_file_names = {"hack", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts"}
-local bad_function_names = {"hack", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz"}
+local bad_file_names = {"smeg", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploitcity"}
+local bad_function_names = {"smeg", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz", "ValidNetString", "addExploit"}
 local bad_global_variables = {"bSendPacket", "ValidNetString", "totalExploits", "addExploit", "AutoReload", "CircleStrafe", "toomanysploits", "Sploit"}
 local bad_module_names = {"dickwrap", "aaa", "enginepred", "bsendpacket", "fhook", "cvar3", "cv3", "nyx", "amplify", "hi", "mega", "pa4", "pspeed", "snixzz2", "spreadthebutter", "stringtables", "svm", "swag", "external"}
-local bad_cvar_names = {"hack", "wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open"}
+local bad_cvar_names = {"smeg", "wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open"}
 local synced_cvar_names = {"sv_allowcslua", "sv_cheats", "r_drawothermodels"}
 
 local m_check_file = true
@@ -75,7 +77,6 @@ local requested_ban = false
 // == UTIL FUNCS
 local function unsafe_player_ban(b_reason, b_info)
   if (requested_ban) then return end
-  print(m_key)
   net_start(m_key)
   net_writebool(true)
   net_writestring(b_reason)
@@ -149,7 +150,7 @@ local function check_synced_convars()
   if (!m_check_synced_cvars) then return end
   local convar_values = {}
   for k, v in loop_pairs(synced_cvar_names) do
-    table_insert(convar_values, {["convar"] = v, ["value"] = get_convar(v):GetString()})
+    table_insert(convar_values, {["convar"] = v, ["value"] = convar_get_string(get_convar(v))})
   end
   net_start("m_check_synced_data")
   net_writetable(convar_values)
@@ -210,11 +211,13 @@ local function run_complete_checks()
   if (requested_ban) then
     send_backup_message()
   end
-  check_bad_concommands()
-  check_synced_convars()
-  check_global_variables()
-  check_screen_cleaner()
-  check_detoured_functions()
+  pcall( function()
+    check_bad_concommands()
+    check_synced_convars()
+    check_global_variables()
+    check_screen_cleaner()
+    check_detoured_functions()
+  end )
 end
 // == UTIL FUNCS
 
