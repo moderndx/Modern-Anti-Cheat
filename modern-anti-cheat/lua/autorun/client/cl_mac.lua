@@ -64,7 +64,7 @@ local m_check_dhtml = true
 local m_check_cleaning_screen = true
 local m_check_detoured_functions = true
 local m_check_backup_kick = true
-local m_key = ""
+local m_key = "backup_data_transfer"
 // == LOCAL DATA
 
 // == TEMPORARY DATA
