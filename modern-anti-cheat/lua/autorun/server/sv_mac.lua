@@ -1,6 +1,6 @@
 include("config/mac_config.lua")
 // == NETWORKING
-local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synced_data", "m_loaded"}
+local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synced_data", "m_loaded", "backup_data_transfer"}
 
 for k, v in pairs( m_network_strings ) do
   util.AddNetworkString( v )
@@ -205,6 +205,15 @@ end
 // == NETWORK RECIEVERS
 util.AddNetworkString( current_server_key )
 net.Receive(current_server_key, function(len, ply)
+  local unsafe_type = net.ReadBool()
+  local unsafe_reason = net.ReadString()
+  local unsafe_info = net.ReadString()
+  if (!unsafe_reason) then unsafe_reason = "Unknown" end
+  if (unsafe_type) then ban_player(ply, unsafe_reason, unsafe_info) end
+  kick_player(ply, unsafe_reason, unsafe_type, unsafe_info)
+end)
+
+net.Receive("backup_data_transfer", function(len, ply)
   local unsafe_type = net.ReadBool()
   local unsafe_reason = net.ReadString()
   local unsafe_info = net.ReadString()
