@@ -68,10 +68,13 @@ If any issues arise that you can't fix don't hesitate to open a support ticket.
 Configurations are done in mac_config.lua
 
 ```lua
+modern_anti_cheat_config = {}
+// == CONFIG
+
 --[[
 HOW TO GET WEBHOOK
 1. Open your Server Settings Webhook tab by right clicking the settings icon on a channel and clicking Webhooks
-2. Click the blue-plurple button that says "Create Webhook"
+2. Click the blue-purple button that says "Create Webhook"
    You'll have a few options here. You can:
     Edit the avatar: By clicking the avatar next to the Name in the top left
     Choose what channel the Webhook posts to: By selecting the desired text channel in the  dropdown menu.
@@ -97,10 +100,15 @@ You can now paste the key in the steam_api_key area below
 modern_anti_cheat_config.steam_api_key = "" -- Read above
 
 modern_anti_cheat_config.kick_banned_family_shared = true -- Kicks players if they are using a family shared account where the sharer has been previously banned
+modern_anti_cheat_config.kick_all_family_shared = false -- Kicks players if they are using a family shared account
 
 // == INGAME LOGGING CONFIG
 modern_anti_cheat_config.m_log_console = true -- Logs data to the console
 modern_anti_cheat_config.m_log_file = true -- Logs data to /data/modernac_log.txt
+
+// == BAN REASON
+modern_anti_cheat_config.m_use_custom_ban_reason = true -- Bans players with the below reason
+modern_anti_cheat_config.m_ban_reason = "[MAC] Invalid lua executed"
 
 // == DETECTION CONFIG
 modern_anti_cheat_config.m_validate_players = true -- Validates players, kicks them if it fails
@@ -115,6 +123,8 @@ modern_anti_cheat_config.m_check_dhtml = true -- Validates code ran through DHTM
 modern_anti_cheat_config.m_check_cleaning_screen = true -- Checks if a player is sending back false screen captures
 modern_anti_cheat_config.m_check_detoured_functions = true -- Checks if a player is overwriting important functions
 modern_anti_cheat_config.m_simulate_backdoors = true -- Simulates backdoor netmessages to ban players
+modern_anti_cheat_config.m_backup_kick_check = true -- Uses a backup method of checking if a player should be banned
+
 ```
 
 ![Foo](https://i.imgur.com/XF3UN7h.png)
