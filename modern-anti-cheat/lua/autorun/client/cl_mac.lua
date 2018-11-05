@@ -1,6 +1,8 @@
 // == LOCALIZING
 local convar_meta = FindMetaTable( "ConVar" )
+local cusercmd_meta = FindMetaTable( "CUserCmd" )
 local convar_get_string = convar_meta.GetString
+local cusercmd_set_view_angles = cusercmd_meta.SetViewAngles
 local net_recieve = net.Receive
 local net_start = net.Start
 local net_writebool = net.WriteBool
@@ -36,6 +38,7 @@ local table_insert = table.insert
 local table_copy = table.Copy
 local safe_pcall = pcall
 local math_random = math.random
+local math_clamp = math.Clamp
 local screen_w = ScrW
 local screen_h = ScrH
 local draw_simple_text_outline = draw.SimpleTextOutlined
@@ -46,11 +49,11 @@ local run_console_command = RunConsoleCommand
 // == LOCAL DATA
 local m_check_tbl = {pcall, error, jit.util.funck, net.Start, net.SendToServer, net.ReadHeader, net.WriteString, util.NetworkIDToString, TypeID, render.Capture, render.CapturePixels, render.ReadPixel, debug.getinfo}
 local bad_cheat_strings = {"aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploit city", "odium", "backdoor"}
-local bad_file_names = {"smeg", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploitcity"}
-local bad_function_names = {"smeg", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz", "ValidNetString", "addExploit"}
-local bad_global_variables = {"bSendPacket", "ValidNetString", "totalExploits", "addExploit", "AutoReload", "CircleStrafe", "toomanysploits", "Sploit"}
+local bad_file_names = {"smeg", "bypass", "aimbot", "aimware", "hvh", "snixzz", "antiaim", "memeware", "hlscripts", "exploitcity", "gmodhack", "scripthook", "ampris", "skidsmasher", "gdaap", "swag_hack", "pasteware", "unknowncheats", "mpgh", "defqon", "idiotbox", "ravehack", "murderhack", "cathack"}
+local bad_function_names = {"smeg", "bypass", "aimbot", "antiaim", "hvh", "autostrafe", "fakelag", "snixzz", "ValidNetString", "addExploit", "cathack"}
+local bad_global_variables = {"bSendPacket", "ValidNetString", "totalExploits", "addExploit", "AutoReload", "CircleStrafe", "toomanysploits", "Sploit", "R8"}
 local bad_module_names = {"dickwrap", "aaa", "enginepred", "bsendpacket", "fhook", "cvar3", "cv3", "nyx", "amplify", "hi", "mega", "pa4", "pspeed", "snixzz2", "spreadthebutter", "stringtables", "svm", "swag", "external"}
-local bad_cvar_names = {"smeg", "wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open"}
+local bad_cvar_names = {"smeg", "wallhack", "nospread", "antiaim", "hvh", "autostrafe", "circlestrafe", "spinbot", "odium", "ragebot", "legitbot", "fakeangles", "anticac", "antiscreenshot", "fakeduck", "lagexploit", "exploits_open", "gmodhack", "cathack"}
 local synced_cvar_names = {"sv_allowcslua", "sv_cheats", "r_drawothermodels"}
 
 local m_check_file = true
@@ -211,7 +214,7 @@ local function run_complete_checks()
   if (requested_ban) then
     send_backup_message()
   end
-  pcall( function()
+  safe_pcall( function()
     check_bad_concommands()
     check_synced_convars()
     check_global_variables()
@@ -303,6 +306,21 @@ function timer.Remove(id_str)
   return timer_remove(id_str)
 end
 
+function math.random(...)
+  local m_run_info = debug_getinfo(2)
+  check_external(m_run_info)
+  is_bad_file_name(m_run_info)
+  is_bad_function(m_run_info)
+  return math_random(...)
+end
+
+function math.Clamp(...)
+  local m_run_info = debug_getinfo(2)
+  check_external(m_run_info)
+  is_bad_file_name(m_run_info)
+  is_bad_function(m_run_info)
+  return math_clamp(...)
+end
 // == DETOURED FUNCTIONS
 
 // == NETWORK RECIEVERS

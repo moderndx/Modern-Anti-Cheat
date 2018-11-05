@@ -36,6 +36,10 @@ modern_anti_cheat_config.kick_all_family_shared = false -- Kicks players if they
 modern_anti_cheat_config.m_log_console = true -- Logs data to the console
 modern_anti_cheat_config.m_log_file = true -- Logs data to /data/modernac_log.txt
 
+// == BAN REASON
+modern_anti_cheat_config.m_use_custom_ban_reason = true -- Bans players with the below reason
+modern_anti_cheat_config.m_ban_reason = "[MAC] Invalid lua executed"
+
 // == DETECTION CONFIG
 modern_anti_cheat_config.m_validate_players = true -- Validates players, kicks them if it fails
 modern_anti_cheat_config.m_check_file = true -- Validates files that call certain functions

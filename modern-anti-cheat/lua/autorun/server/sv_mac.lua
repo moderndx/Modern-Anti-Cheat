@@ -8,9 +8,9 @@ end
 // == NETWORKING
 
 // == LOCAL DATA
-local anti_cheat_version = "0011"
+local anti_cheat_version = "0012"
 
-local bad_net_messages = {"memeDoor", "ZimbaBackDoor", "enablevac", "adm_network", "AidsTacos", "thereaper", "ULX_ANTI_BACKDOOR", "FADMIN_ANTICRASH", "ULX_QUERY_TEST2", "anticrash", "_CAC_ReadMemory", "verifiopd", "Sandbox_ArmDupe", "ULX_QUERY2", "pwn_wake", "pwn_http_answer", "pwn_http_send"}
+local bad_net_messages = {"Sandbox_ArmDupe", "Sbox_darkrp", "Sbox_itemstore", "Ulib_Message", "ULogs_Info", "ITEM", "R8", "fix", "Fix_Keypads", "Remove_Exploiters", "noclipcloakaesp_chat_text", "_Defqon", "_CAC_ReadMemory", "nocheat", "LickMeOut", "ULX_QUERY2", "ULXQUERY2", "MoonMan", "Im_SOCool", "Sandbox_GayParty", "DarkRP_UTF8", "oldNetReadData", "memeDoor", "BackDoor", "OdiumBackDoor", "SessionBackdoor", "DarkRP_AdminWeapons", "cucked", "ZimbaBackDoor", "enablevac", "killserver", "fuckserver", "cvaraccess", "DefqonBackdoor"}
 // == LOCAL DATA
 
 // == TEMPORARY DATA
@@ -64,8 +64,15 @@ end
 
 local function ban_player(ply, reason, reason_data)
   if (!ply || !IsValid(ply)) then return end
+
   log_ac_data(ply:Name().." is being banned for "..reason, ply, reason_data)
+
   hook.Run("modern_banned_player", ply, reason)
+
+  if (modern_anti_cheat_config.m_use_custom_ban_reason) then
+    reason = modern_anti_cheat_config.m_ban_reason
+  end
+
   if (ULib) then
     ULib.ban(ply, 0, reason)
     return
@@ -194,7 +201,7 @@ local function update_check()
   http.Fetch("https://raw.githubusercontent.com/moderndx/ModernACDocs/master/vers.txt",
   function(response)
     if (tonumber(response) != tonumber(anti_cheat_version)) then
-      log_ac_data("THIS VERSION OF THE ANTI CHEAT IS OUTDATED! PLEASE UPDATE TO VERSION "..response)
+      log_ac_data("THIS VERSION OF THE ANTI CHEAT IS OUTDATED! PLEASE UPDATE TO VERSION "..response.. " \n github.com/moderndx/Modern-Anti-Cheat")
     else
       log_ac_data("Modern Anti Cheat V"..anti_cheat_version.." has loaded!")
     end
@@ -238,7 +245,7 @@ net.Receive("m_check_synced_data", function(len, ply)
     local temp_var = GetConVar(v["convar"])
     if (!temp_var) then continue end
     if (v["value"] != temp_var:GetString()) then
-      kick_player(ply, v["convar"].. " is desynced")
+      ban_player(ply, v["convar"].. " is desynced")
       return
     end
   end
