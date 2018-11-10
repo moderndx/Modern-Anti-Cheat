@@ -1,4 +1,5 @@
 // == LOCALIZING
+local m_saved_os = jit.os
 local convar_meta = FindMetaTable( "ConVar" )
 local cusercmd_meta = FindMetaTable( "CUserCmd" )
 local convar_get_string = convar_meta.GetString
@@ -194,7 +195,7 @@ local function is_bad_file_name(m_dbg_tbl)
 end
 
 local function check_screen_cleaner()
-  if (!m_check_cleaning_screen) then return end
+  if (!m_check_cleaning_screen || m_saved_os == "OSX" || m_saved_os == "Linux") then return end
   if (get_screen_capture() != 0) then
     unsafe_player_ban("Screen capture returned invalid results")
   end
