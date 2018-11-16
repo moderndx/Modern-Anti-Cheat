@@ -230,6 +230,7 @@ net.Receive("backup_data_transfer", function(len, ply)
 end)
 
 net.Receive("m_validate_player", function(len, ply)
+  if (verified_player(ply)) then return end
   if (table.HasValue(player_verification_data, ply)) then
     table.RemoveByValue(player_verification_data, ply)
   end
