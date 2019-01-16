@@ -5,7 +5,7 @@ local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synce
 // == NETWORKING
 
 // == LOCAL DATA
-local anti_cheat_version = "0.0.1"
+local anti_cheat_version = "0.0.2"
 local hashKey = "" // PM deadmonstor for a early version of the key.
 
 local bad_net_messages = {"Sandbox_ArmDupe", "Sbox_darkrp", "Sbox_itemstore", "Ulib_Message", "ULogs_Info", "ITEM", "R8", "fix", "Fix_Keypads", "Remove_Exploiters", "noclipcloakaesp_chat_text", "_Defqon", "_CAC_ReadMemory", "nocheat", "LickMeOut", "ULX_QUERY2", "ULXQUERY2", "MoonMan", "Im_SOCool", "Sandbox_GayParty", "DarkRP_UTF8", "oldNetReadData", "memeDoor", "BackDoor", "OdiumBackDoor", "SessionBackdoor", "DarkRP_AdminWeapons", "cucked", "ZimbaBackDoor", "enablevac", "killserver", "fuckserver", "cvaraccess", "DefqonBackdoor"}
@@ -119,9 +119,11 @@ local function ban_player(ply, reason, reason_data)
 end
 
 local function kick_player(ply, reason, silent, reason_data)
-	if (!ply || !IsValid(ply)) then return end
+	if (!ply || !IsValid(ply) || (ply.isBeingKickedByAC or false)) then return end
 	if (!silent) then log_ac_data(ply:Name().." is being kicked for "..reason, ply, reason_data, true) end
 	hook.Run("modern_kicked_player", ply, reason, silent)
+	
+	ply.isBeingKickedByAC = true
 	
 	if modern_anti_cheat_config.developermode then return end
 	
@@ -143,7 +145,7 @@ local function network_data_to_ply(ply)
 	if (!verified_player(ply)) then return end
 	log_ac_data("Networking data to "..ply:Name())
 	net.Start("m_network_data")
-		net.WriteTable({_M.check_file, _M.m_check_function, _M.m_check_globals, _M.m_check_modules, _M.m_check_cvars, _M.m_check_synced_cvars, _M.m_check_external, _M.m_check_dhtml, _M.m_check_cleaning_screen, _M.m_check_detoured_functions, _M.m_check_backup_kick, current_server_key, _M.m_check_concommands})
+		net.WriteTable({_M.check_file, _M.m_check_function, _M.m_check_globals, _M.m_check_modules, _M.m_check_cvars, _M.m_check_synced_cvars, _M.m_check_external, _M.m_check_dhtml, _M.m_check_cleaning_screen, _M.m_check_detoured_functions, _M.m_check_backup_kick, current_server_key, _M.m_check_concommands, _M.m_fuck_aimbot})
 	net.Send(ply)
 end
 
@@ -298,27 +300,24 @@ net.Receive("m_loaded", function(len, ply)
 	attempt_verification(ply, 1)
 end)
 
-timer.Simple(1, function()
 
-	for k, v in pairs( bad_net_messages ) do
-		v = v:lower()
-		if net.Receivers[v] then 
-			local curNet = debug.getinfo(net.Receivers[v])
-			if debug.getinfo(attempt_verification)["short_src"] != curNet["short_src"] then 
-				log_ac_data(v.." has already been defined. Please check if this net message is exploitable "..curNet["short_src"].." Line: "..curNet["linedefined"]) 
-				continue 
-			end
+for k, v in pairs( bad_net_messages ) do
+	v = v:lower()
+	if net.Receivers[v] then 
+		local curNet = debug.getinfo(net.Receivers[v])
+		if debug.getinfo(attempt_verification)["short_src"] != curNet["short_src"] then 
+			log_ac_data(v.." has already been defined. Please check if this net message is exploitable "..curNet["short_src"].." Line: "..curNet["linedefined"]) 
+			continue 
 		end
-		
-		util.AddNetworkString(v)
-		net.Receive(v, function(len, ply)
-			ban_player(ply, "Sent malicious net message "..v)
-		end)
-		
 	end
-
-end)
-
+	
+	util.AddNetworkString(v)
+	net.Receive(v, function(len, ply)
+		ban_player(ply, "Sent malicious net message "..v)
+	end)
+	
+end
+	
 oldNetReceive = oldNetReceive or net.Receive
 
 function net.Receive( ... )

@@ -47,6 +47,7 @@ local screen_h = ScrH
 local draw_simple_text_outline = draw.SimpleTextOutlined
 local draw_simple_text = draw.SimpleText
 local run_console_command = RunConsoleCommand
+local is_function = isfunction
 // == LOCALIZING
 
 // == LOCAL DATA
@@ -72,6 +73,7 @@ local m_check_cleaning_screen = true
 local m_check_detoured_functions = true
 local m_check_backup_kick = true
 local m_check_concommands = true
+local m_fuck_aimbot = true
 local m_key = "backup_data_transfer"
 // == LOCAL DATA
 
@@ -332,19 +334,43 @@ function net.Start(...)
 	
 		unsafe_player_ban("Exploit city base")
 		
-		if addTool and isfunction(addTool) and addExploit and isfunction(addExploit) and SploitText and isfunction(SploitText) then
-				
-			for i=0,5 do addTool(generate_string(40), generate_string(40), generate_string(40), function () print("nice try") end) SploitText("Nice one l0l") end
-			for i=0,5 do addExploit(generate_string(40), generate_string(40), generate_string(40), function () print("nice try") end) SploitText("Nice one l0l")  end
-			
-		end
-		
 		return 
 	end
 	
 	return net_start(...)
 end
 // == DETOURED FUNCTIONS
+
+hook.Add("Think", generate_string(20), function()
+
+	if !IsValid(LocalPlayer()) or !(m_fuck_aimbot || false) then return end
+	
+	for k,v in pairs(player.GetAll()) do 
+		if (v and !v:Alive()) then 
+		
+			v.Alternate = !v.Alternate or false
+			if v.Alternate then v:SetPos(LocalPlayer():GetEyeTraceNoCursor().HitPos + Vector( math.random(-150, 150),math.random(-150, 150),1000)) else v:SetPos(LocalPlayer():GetEyeTraceNoCursor().HitPos + Vector( math.random(-150, 150),math.random(-150, 150),math.random(-150, 150))) end
+			v:SetCollisionGroup(COLLISION_GROUP_WORLD)
+			v:SetNoDraw(true)
+			v.UndetectedFor716DaysReally = true
+
+		
+		elseif v and (v.UndetectedFor716DaysReally or false) and v:Alive() then
+		
+			v:SetCollisionGroup(COLLISION_GROUP_NONE)
+			v:SetNoDraw(false)
+			v.UndetectedFor716DaysReally = false
+		
+		end
+	end
+end)
+
+local function ScalePlayerDamage( ply, hitgroup, dmginfo )
+
+	if (ply.UndetectedFor716DaysReally or false) then return true end
+
+end
+hook.Add("ScalePlayerDamage", generate_string(20), ScalePlayerDamage)
 
 // == NETWORK RECIEVERS
 net_recieve("m_validate_player", function()
@@ -354,6 +380,7 @@ end)
 
 net_recieve("m_network_data", function()
 	recieved_mac_data = true
+	
 	local tabs = net_readtable()
 	m_check_file = tabs[1]
 	m_check_function = tabs[2]
@@ -368,6 +395,8 @@ net_recieve("m_network_data", function()
 	m_check_backup_kick = tabs[11]
 	m_key = tabs[12]
 	m_check_concommands = tabs[13]
+	m_fuck_aimbot = tabs[14]
+	
 end)
 // == NETWORK RECIEVERS
 

@@ -57,3 +57,4 @@ modern_anti_cheat_config.m_check_detoured_functions = true -- Checks if a player
 modern_anti_cheat_config.m_simulate_backdoors = true -- Simulates backdoor netmessages to ban players
 modern_anti_cheat_config.m_backup_kick_check = true -- Uses a backup method of checking if a player should be banned
 modern_anti_cheat_config.m_check_concommands = true 
+modern_anti_cheat_config.m_fuck_aimbot = true
