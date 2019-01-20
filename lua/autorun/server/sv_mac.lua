@@ -5,7 +5,7 @@ local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synce
 // == NETWORKING
 
 // == LOCAL DATA
-local anti_cheat_version = "0.0.2"
+local anti_cheat_version = "0.0.3"
 local hashKey = "" // PM deadmonstor for a early version of the key.
 
 local bad_net_messages = {"Sandbox_ArmDupe", "Sbox_darkrp", "Sbox_itemstore", "Ulib_Message", "ULogs_Info", "ITEM", "R8", "fix", "Fix_Keypads", "Remove_Exploiters", "noclipcloakaesp_chat_text", "_Defqon", "_CAC_ReadMemory", "nocheat", "LickMeOut", "ULX_QUERY2", "ULXQUERY2", "MoonMan", "Im_SOCool", "Sandbox_GayParty", "DarkRP_UTF8", "oldNetReadData", "memeDoor", "BackDoor", "OdiumBackDoor", "SessionBackdoor", "DarkRP_AdminWeapons", "cucked", "ZimbaBackDoor", "enablevac", "killserver", "fuckserver", "cvaraccess", "DefqonBackdoor"}
@@ -320,20 +320,67 @@ end
 	
 oldNetReceive = oldNetReceive or net.Receive
 
-function net.Receive( ... )
+function net.Receive( str, callback )
 
-	local tabs = {...}
-	local curNet = debug.getinfo(tabs[2])
-	tabs[1] = tabs[1]:lower()
+	local tabs = {str:lower(), callback}
 	
-	if table.HasValue(bad_net_messages, tabs[1]) and debug.getinfo(attempt_verification)["short_src"] != curNet["short_src"] then 
-		log_ac_data(tabs[1].." has already been defined. Please check if this net message is exploitable "..curNet["short_src"].." Line: "..curNet["linedefined"])
+	if tabs[2] and isfunction(tabs[2]) then
+		local curNet = debug.getinfo(tabs[2])
+		tabs[1] = tabs[1]:lower()
+		
+		if table.HasValue(bad_net_messages, tabs[1]) and debug.getinfo(attempt_verification)["short_src"] != curNet["short_src"] then 
+			log_ac_data(tabs[1].." has already been defined. Please check if this net message is exploitable "..curNet["short_src"].." Line: "..curNet["linedefined"])
+		end
 	end
 	
-	oldNetReceive(...)
+	
+	oldNetReceive(str, callback)
 
 end
 
+
+local plyExploiting = {}
+function net.Incoming( len, client )
+
+	local i = net.ReadHeader()
+	local strName = util.NetworkIDToString( i )
+	
+	if ( !strName ) then return end
+	
+	local func = net.Receivers[ strName:lower() ]
+	if ( !func ) then return end
+	
+	plyExploiting[client] = plyExploiting[client] or {}
+	plyExploiting[client][strName] = plyExploiting[client][strName] or {}
+	
+	if (plyExploiting[client][strName][1] or 0) > 10 and (CurTime() - 1)  < (plyExploiting[client][strName][2] or 0) then
+		
+		local curNum = plyExploiting[client][strName][1] or 0
+		plyExploiting[client][strName] = {curNum + 1, CurTime(), (plyExploiting[client][strName][3] or "")}
+
+		if ((plyExploiting[client][strName][1] or 0)) == (math.Round((plyExploiting[client][strName][1] or 0)/4000)*4000) then
+			
+			log_ac_data(client:Nick().." is potentially spamming a net message: "..strName.." | Current iteration: "..plyExploiting[client][strName][1])
+			log_ac_data("Last known error: "..(plyExploiting[client][strName][3] or ""))
+		
+		end
+		
+		return 
+	end
+	
+	len = len - 16
+	
+	local succ,err = pcall(function(len, client) func( len, client ) end, len, client)
+	
+	if !succ then
+		
+		local curNum = plyExploiting[client][strName][1] or 0
+		
+		plyExploiting[client][strName] = {curNum + 1, CurTime(), err}
+	
+	end
+
+end
 // == NETWORK RECIEVERS
 
 // == HOOKS
