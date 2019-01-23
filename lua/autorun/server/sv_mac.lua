@@ -5,8 +5,7 @@ local m_network_strings = {"m_validate_player", "m_network_data", "m_check_synce
 // == NETWORKING
 
 // == LOCAL DATA
-local anti_cheat_version = "0.0.3"
-local hashKey = "" // PM deadmonstor for a early version of the key.
+local anti_cheat_version = "0.0.4"
 
 local bad_net_messages = {"Sandbox_ArmDupe", "Sbox_darkrp", "Sbox_itemstore", "Ulib_Message", "ULogs_Info", "ITEM", "R8", "fix", "Fix_Keypads", "Remove_Exploiters", "noclipcloakaesp_chat_text", "_Defqon", "_CAC_ReadMemory", "nocheat", "LickMeOut", "ULX_QUERY2", "ULXQUERY2", "MoonMan", "Im_SOCool", "Sandbox_GayParty", "DarkRP_UTF8", "oldNetReadData", "memeDoor", "BackDoor", "OdiumBackDoor", "SessionBackdoor", "DarkRP_AdminWeapons", "cucked", "ZimbaBackDoor", "enablevac", "killserver", "fuckserver", "cvaraccess", "DefqonBackdoor"}
 // == LOCAL DATA
@@ -51,13 +50,15 @@ local function strip_port(player_ip)
 	return string.Explode(":", player_ip)[1]
 end
 
-local function notify_server(ban_reason, steam_id, playerip, ext_data) // For webviewer later on
+local function notify_server(ban_reason, steam_id, playerip, ext_data, shouldLog) // For webviewer later on
 	local ip,port = (GetConVarString('ip')),(GetConVarString('hostport'))
+	shouldLog = (shouldLog == nil and true) or shouldLog
 	
 	ip = ip == "localhost" and "127.0.0.1" or ip
 	
+	local url = (shouldLog and "https://api.thealterway.com/log" or "https://api.thealterway.com/verify")
 	local servername = tostring(GetHostName())
-	http.Post("https://ac.thealterway.com/api/log", 
+	http.Post(url, 
 		{ hostname = servername, server = ip, port = port, banreas = ban_reason, steamid = steam_id, playeradr = playerip, playerbandata = ext_data, webhook = _M.discord_webhook },
 		function( result ) 
 			if result then
@@ -68,11 +69,11 @@ local function notify_server(ban_reason, steam_id, playerip, ext_data) // For we
 			end
 		end, 
 		function( failed ) end, 
-		{["Authorization"] = hashKey}
+		{["Authorization"] = _M.hashKey}
 	)
 end
 
-local function log_ac_data(msg, ply, ban_data, shouldPrint)
+local function log_ac_data(msg, ply, ban_data, shouldPrint, shouldLog)
 	local m_output_data = "[FMAC] "..msg.."\r\n"
 	if (_M.m_log_console) then
 		Msg(m_output_data)
@@ -80,15 +81,17 @@ local function log_ac_data(msg, ply, ban_data, shouldPrint)
 	if (_M.m_log_file) then
 		write_to_file("fmodernac_log.txt", m_output_data)
 	end
+	
 	if (_M.m_log_discord && ply && (shouldPrint || false) && !(ply.isBeingBannedByAC or false)) then
-		notify_server(msg, ply:SteamID64(), strip_port(ply:IPAddress()), ban_data or "No Data")
+		notify_server(msg, ply:SteamID64(), strip_port(ply:IPAddress()), ban_data or "No Data", shouldLog)
 	end
 end
 
 local function ban_player(ply, reason, reason_data)
 	if (!ply || !IsValid(ply) || (ply.isBeingBannedByAC or false)) then return end
 
-	log_ac_data(ply:Name().." is being banned for having a "..reason, ply, reason_data, true)
+	local shouldPrint = _M and _M.m_whatshouldLog and _M.m_whatshouldLog["banned"] or false
+	log_ac_data(ply:Name().." is being banned for having a "..reason, ply, reason_data, shouldPrint)
 
 	hook.Run("modern_banned_player", ply, reason)
 
@@ -120,7 +123,12 @@ end
 
 local function kick_player(ply, reason, silent, reason_data)
 	if (!ply || !IsValid(ply) || (ply.isBeingKickedByAC or false)) then return end
-	if (!silent) then log_ac_data(ply:Name().." is being kicked for "..reason, ply, reason_data, true) end
+	
+	if (!silent) then 
+		local shouldPrint = _M and _M.m_whatshouldLog and _M.m_whatshouldLog["kicked"] or false
+		log_ac_data(ply:Name().." is being kicked for "..reason, ply, reason_data, shouldPrint) 
+	end
+	
 	hook.Run("modern_kicked_player", ply, reason, silent)
 	
 	ply.isBeingKickedByAC = true
@@ -151,7 +159,7 @@ end
 
 local function attempt_verification(ply, step)
 
-	if (verified_player(ply)) then return end
+	if (verified_player(ply) || !(ply.hasLoaded or false)) then return end
 	
 	if (!_M.m_validate_players || ply:IsBot()) then
 		verify_player(ply)
@@ -160,18 +168,22 @@ local function attempt_verification(ply, step)
 		return
 	end
 	
-	if (step >= 3) then kick_player(ply, "Verification Failed") end
+	if (step > 4) then kick_player(ply, "Verification Failed") end
 	
 	table.insert(player_verification_data, ply)
 	net.Start("m_validate_player")
 	net.Send(ply)
+	ply.anticheatStep = step
 	
-	timer.Simple(120, function()
+	local time = (5 + math.Clamp(ply:Ping() / 5, 20, 30))
+	if step == 1 then log_ac_data("Started to validate "..ply:Nick().." time: "..time, ply) end
+
+	timer.Simple(time, function()
 	
 		if (!ply || !IsValid(ply)) then return end
 		
-		if (!verified_player(ply)) then
-
+		if (!verified_player(ply) and ply.anticheatStep + 1 == step + 1) then
+	
 			attempt_verification(ply, step + 1)
 			log_ac_data(ply:Name().." validation check failed, retrying [attempt "..step.."]", ply)
 			
@@ -180,6 +192,22 @@ local function attempt_verification(ply, step)
 	end)
 	
 end
+
+hook.Add("Move", "modern_ac_hasLoaded", function(ply , mv)
+
+	if !(ply.hasLoaded or false) then
+		
+		local x = mv:GetVelocity()
+		local y = mv:GetButtons()
+		
+		if x[1] > 0 or x[2] > 0 or x[3] > 0 or y != 0 then
+		
+			ply.hasLoaded = true
+		
+		end
+		
+	end
+end)
 
 local function keypress_verification_check(ply)
 
@@ -245,7 +273,7 @@ local function update_check()
 
 		if tabs and tabs["ver"] and (tostring(tabs["ver"]) != tostring(anti_cheat_version)) then
 			tabs["changeLog"] = tabs["changeLog"] or "Unknown"
-			log_ac_data("THIS VERSION OF THE ANTI CHEAT IS OUTDATED! PLEASE UPDATE TO VERSION "..tabs["ver"].. " \n https://github.com/deadmonstor/Modern-Anti-Cheat \n Changes: "..tabs["changeLog"])
+			log_ac_data("THIS VERSION OF THE ANTI CHEAT IS OUTDATED! PLEASE UPDATE TO VERSION "..tabs["ver"].. " \n https://github.com/deadmonstor/Modern-Anti-Cheat \n Changes: "..tabs["changeLog"], "", true, false)
 		else
 			log_ac_data("FModern Anti Cheat V"..anti_cheat_version.." has loaded!")
 		end
@@ -278,7 +306,10 @@ net.Receive("m_validate_player", function(len, ply)
 	if (table.HasValue(player_verification_data, ply)) then
 		table.RemoveByValue(player_verification_data, ply)
 	end
-	log_ac_data(ply:Name().." has been verified", ply)
+	
+	local shouldPrint = _M and _M.m_whatshouldLog and _M.m_whatshouldLog["verified"] or false
+	log_ac_data(ply:Name().." has been verified", ply, "", shouldPrint, false)
+	
 	verify_player(ply)
 	network_data_to_ply(ply)
 end)
@@ -295,11 +326,6 @@ net.Receive("m_check_synced_data", function(len, ply)
 		end
 	end
 end)
-
-net.Receive("m_loaded", function(len, ply)
-	attempt_verification(ply, 1)
-end)
-
 
 for k, v in pairs( bad_net_messages ) do
 	v = v:lower()

@@ -14,8 +14,10 @@ You can now paste the URL in the discord_webhook config area below
 ]]--
 
 modern_anti_cheat_config.discord_webhook = "" -- Read above
+modern_anti_cheat_config.hashKey = ""  // PM deadmonstor for a early version of the key.
 
 modern_anti_cheat_config.m_log_discord = true -- Relays data to a discord webhook (set above)
+modern_anti_cheat_config.m_whatshouldLog = {["kicked"] = true, ["banned"] = true, ["verified"] = false} // What should relay to discord
 
 --[[
 HOW TO GET A STEAM API KEY

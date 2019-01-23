@@ -406,11 +406,4 @@ timer_create(timer_name, 15, 0, run_complete_checks)
 run_complete_checks()
 // == TIMERS
 
-// == SETUP
-timer_simple(0, function()
-	net_start("m_loaded")
-	net_sendtoserver()
-end)
-// == SETUP
-
 
