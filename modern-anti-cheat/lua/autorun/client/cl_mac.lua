@@ -45,6 +45,7 @@ local screen_h = ScrH
 local draw_simple_text_outline = draw.SimpleTextOutlined
 local draw_simple_text = draw.SimpleText
 local run_console_command = RunConsoleCommand
+local system_hasfocus = system.HasFocus
 // == LOCALIZING
 
 // == LOCAL DATA
@@ -195,7 +196,7 @@ local function is_bad_file_name(m_dbg_tbl)
 end
 
 local function check_screen_cleaner()
-  if (!m_check_cleaning_screen || m_saved_os == "OSX" || m_saved_os == "Linux") then return end
+  if (!system_hasfocus() || !m_check_cleaning_screen || m_saved_os == "OSX" || m_saved_os == "Linux") then return end
   if (get_screen_capture() != 0) then
     unsafe_player_ban("Screen capture returned invalid results")
   end
